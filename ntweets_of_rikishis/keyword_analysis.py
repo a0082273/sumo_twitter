@@ -55,7 +55,7 @@ def exclude_bot_data(data):
                        '手押し相撲' , '一人相撲' , '独り相撲', 'ローション', '名言集', '紙相撲',
                        '火の丸', 'カーネーション', '他人の褌で相撲を取る', '菊とギロチン', '伝令',
                        '格闘技、プロ野球、相撲好き', '女相撲', '氷結相撲', '尻相撲', 'とんとん相撲',
-                       'トントン相撲', 'バブル相撲', 'ストッキング相撲', 'ちびっこ相撲']
+                       'トントン相撲', 'バブル相撲', 'ストッキング相撲', 'ちびっこ相撲', 'モンゴル相撲']
 
     for col in range(data.shape[0]):
         if type(data.loc[col, 'name']) == str:
@@ -84,14 +84,7 @@ def exclude_bot_data(data):
 def words_with_keyword(data):
     print('words_with_keyword')
     word_list = make_word_list(data)
-    # counter = Counter(word_list)
-    # for word, cnt in counter.most_common():
-    #     print(word, cnt)
-
     word_list = remove_stop_words(word_list)
-    # counter = Counter(word_list)
-    # for word, cnt in counter.most_common(10):
-    #     print(word, cnt)
     return word_list
 
 
@@ -101,7 +94,6 @@ def make_word_list(data):
     word_list = []
     for i in range(data.shape[0]):
         if type(data.text[i]) == str:
-            # texts = m.parse(data.loc['text', i])
             texts = m.parse(data.loc[i, 'text'])
             texts = texts.split('\n')
             for text in texts:
@@ -130,7 +122,7 @@ def remove_stop_words(word_list):
         '手', '次', '観', '君', '…。', '山', '感', '回', 'ww', 'SD', '差'
     ]
 
-    For word in stop_words:
+    for word in stop_words:
         remove_specified_values(word_list, word)
     return word_list
 
@@ -167,7 +159,8 @@ def make_summary(ymd, word_list, summary):
     else:
         summary = pd.concat([summary, summary_1d], axis=1)
     summary_1d.to_csv(f'output/{ymd}.csv')
-    summary.to_csv(f'output/2018-07.csv')
+    if ymd == '2018-07-22':
+        summary.to_csv(f'output/2018-07.csv')
     return summary
 
 

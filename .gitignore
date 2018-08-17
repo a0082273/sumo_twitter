@@ -3,5 +3,6 @@ input/
 output/
 qiita/
 __pycache__/
+setting.py
 .ipynb_checkpoints/
 .DS_Store
