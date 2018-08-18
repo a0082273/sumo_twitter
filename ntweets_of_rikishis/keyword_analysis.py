@@ -10,20 +10,28 @@ import sys
 
 
 
-def make_1d_data(ymd):
-    print('make_1d_data')
-    infilename = f'input/sumou{ymd}.csv'
-    one_day = pd.read_csv(open(infilename, 'rU'), encoding='utf-8')
-    one_day = one_day.drop('Unnamed: 0', axis=1)
-    return one_day
+def make_basho_tweets(rikishi):
+    print('make_rikishi_data')
+    ym = '2018-07-'
+    day = ['08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22']
+    one_day = []
+
+    for d in day:
+        ymd = ym+d
+        infilename = f'input/{rikishi}{ymd}.csv'
+        one_day.append(pd.read_csv(open(infilename, 'rU'), encoding='utf-8'))
+    basho = pd.concat(one_day, axis=0)
+    basho = basho.reset_index(drop=True)
+    return basho
 
 
 
-def exclude_inappropriate_data(data, ymd):
+def exclude_inappropriate_data(rikishi, data):
     print('exclude_inappropriate_data')
+    data = data.drop('Unnamed: 0', axis=1)
     data = exclude_nan_data(data)
     data = exclude_bot_data(data)
-    data.to_csv(f'output/{ymd}_tweets.csv')
+    data.to_csv(f'output/{rikishi}_tweets.csv')
     return data
 
 
@@ -31,12 +39,7 @@ def exclude_inappropriate_data(data, ymd):
 def exclude_nan_data(data):
     improper_col = []
     for col in range(data.shape[0]):
-        # if type(data.loc['text', col]) != str:
         if type(data.loc[col, 'text']) != str:
-            # print('-'*20)
-            # print(col)
-            # print(type(data.name[col]), type(data.profile[col]), type(data.text[col]),)
-            # print(data.iloc[col])
             improper_col.append(col)
     print('num of improper col:', len(improper_col))
     data = data.drop(improper_col, axis=0)
@@ -45,30 +48,34 @@ def exclude_nan_data(data):
 
 
 def exclude_bot_data(data):
-    improper_names  = ['bot', 'Bot', 'BOT', 'ぼっと', '情報', '案内', '相互', '出会', 'セフレ',
-                       'エッチ', '法人', '相撲 バズウォール', '逢華', '大西啓太', 'News', 'NEWS',
-                       'news', 'ニュース', '新聞', '報道', 'バカボンのパパ', '久保寺健之',
-                       '沖縄タイムス', 'チケット×チケット']
+    improper_names  = [
+        'bot', 'Bot', 'BOT', 'ぼっと', '情報', '案内', '法人', 'News', 'NEWS', 'news',
+        'ニュース', '新聞', '報道', '沖縄タイムス', 'オンリーワンダースポーツカフェ'
+        # '相互', '出会', 'セフレ', 'エッチ', '相撲 バズウォール', '逢華', '大西啓太',
+        # 'バカボンのパパ', '久保寺健之', 'チケット×チケット'
+    ]
     improper_profiles  = ['improper_words', 'bot', 'Bot', 'BOT', 'ぼっと', '公式ツイッター',
                           '公式アカウント']
-    improper_texts  = ['improper_words', "I'm at", '相互', 'imacoconow', '火ノ丸', '大喜利',
-                       '手押し相撲' , '一人相撲' , '独り相撲', 'ローション', '名言集', '紙相撲',
-                       '火の丸', 'カーネーション', '他人の褌で相撲を取る', '菊とギロチン', '伝令',
-                       '格闘技、プロ野球、相撲好き', '女相撲', '氷結相撲', '尻相撲', 'とんとん相撲',
-                       'トントン相撲', 'バブル相撲', 'ストッキング相撲', 'ちびっこ相撲', 'モンゴル相撲']
+    improper_texts  = [
+        'improper_words', 'snd', '白鵬女子', '孤高の荒鷲', '荒鷲よ翔べ', 'イーグルシャウト',
+        'アニカフェ', 'SideM','缶バッジ', 'かのん', 'ニシキヘビ', '盆栽', '雑木'
+        # 'ライブ', '糸千代丸', '志倉千代丸'
+        # "I'm at", '相互', 'imacoconow', '火ノ丸', '大喜利',
+        # '手押し相撲' , '一人相撲' , '独り相撲', 'ローション', '名言集', '紙相撲',
+        # '火の丸', 'カーネーション', '他人の褌で相撲を取る', '菊とギロチン', '伝令',
+        # '格闘技、プロ野球、相撲好き', '女相撲', '氷結相撲', '尻相撲', 'とんとん相撲',
+        # 'トントン相撲', 'バブル相撲', 'ストッキング相撲', 'ちびっこ相撲', 'モンゴル相撲'
+    ]
 
     for col in range(data.shape[0]):
         if type(data.loc[col, 'name']) == str:
             for word in improper_names:
                 if word in data.loc[col, 'name']:
-                    # data['profile'][col] = 'improper_words'
                     data.loc[col, 'text'] = 'improper_words'
-                    # data.loc[col, 'profile'] = 'improper_words'
                     break
         if type(data.loc[col, 'profile']) == str:
             for word in improper_profiles:
                 if word in data.loc[col, 'profile']:
-                    # data['text'][col] = 'improper_words'
                     data.loc[col, 'text'] = 'improper_words'
                     break
         for word in improper_texts:
@@ -88,7 +95,6 @@ def words_with_keyword(data):
     return word_list
 
 
-
 def make_word_list(data):
     m = MeCab.Tagger("-d /usr/local/lib/mecab/dic/mecab-ipadic-neologd/")
     word_list = []
@@ -103,7 +109,6 @@ def make_word_list(data):
                 elif text[1] == '名詞':
                     word_list.append(text[0])
     return word_list
-
 
 
 def remove_stop_words(word_list):
@@ -127,14 +132,13 @@ def remove_stop_words(word_list):
     return word_list
 
 
-
 def remove_specified_values(arr, value):
     while value in arr:
         arr.remove(value)
 
 
 
-def make_word_cloud(ymd, word_list):
+def make_word_cloud(rikishi, word_list):
     print('make_word_cloud')
     word_list = ' '.join(word_list)
 
@@ -144,39 +148,140 @@ def make_word_cloud(ymd, word_list):
     plt.figure(figsize=(10,8))
     plt.imshow(wordcloud)
     plt.axis("off")
-    plt.savefig(f'output/{ymd}.png')
+    plt.savefig(f'output/{rikishi}_wordcloud.png')
     plt.show()
 
 
 
-def make_summary(ymd, word_list, summary):
-    print('make_summary')
-    counter = Counter(word_list)
-    words, counts = zip(*counter.most_common(100))
-    summary_1d = pd.Series(data=counts, index=words, name=ymd)
-    if ymd == '2018-07-08':
-        summary = summary_1d.copy()
-    else:
-        summary = pd.concat([summary, summary_1d], axis=1)
-    summary_1d.to_csv(f'output/{ymd}.csv')
-    if ymd == '2018-07-22':
-        summary.to_csv(f'output/2018-07.csv')
-    return summary
+# def make_words_summary(rikishi, ymd, word_list, summary):
+#     print('make_summary')
+#     counter = Counter(word_list)
+#     words, counts = zip(*counter.most_common(100))
+#     summary_1d = pd.Series(data=counts, index=words, name=ymd)
+#     if ymd == '2018-07-08':
+#         summary = summary_1d.copy()
+#     else:
+#         summary = pd.concat([summary, summary_1d], axis=1)
+#     # summary_1d.to_csv(f'output/{rikishi}{ymd}_words.csv')
+#     if ymd == '2018-07-22':
+#         summary.to_csv(f'output/{rikishi}_words.csv')
+#     return summary
+
+
+
+
+def make_rikishi_data(rikishi):
+    print('make_rikishi_data')
+
+    day = ['08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22']
+    infilename = f'output/{rikishi}_tweets.csv'
+    rikishi_tweets = pd.read_csv(open(infilename, 'rU'), encoding='utf-8')
+
+    ntweets = rikishi_ntweets(rikishi_tweets, day) #rikishiを含むツイートの総数
+    following = rikishi_following(rikishi_tweets)
+    followed = rikishi_followed(rikishi_tweets)
+    n_tweets = rikishi_n_tweets(rikishi_tweets) #rikishiを含むツイートをしたアカウントのこれまでのツイート総数
+    favorited = rikishi_favorited(rikishi_tweets)
+    rikishi_data = pd.concat([ntweets, following, followed, n_tweets, favorited], axis=0)
+    return rikishi_data
+
+
+def rikishi_ntweets(rikishi_tweets, day):
+    ntweets = []
+    for d in day:
+        cnt = list(rikishi_tweets['time'].str.contains(f' {d} ').values).count(True)
+        ntweets.append(cnt)
+    ntweets.append(rikishi_tweets.shape[0])
+    index = ['ntweets_day'+str(i) for i in range(1, 16)]
+    index.append('ntweets_sum')
+    rikishi_data = pd.Series(data=ntweets, index=index, name=rikishi)
+    return rikishi_data
+
+
+def rikishi_following(rikishi_tweets):
+    index = ['mean', 'std', 'min', '25%', '50%', '75%', 'max']
+    following = []
+    for ind in index:
+        following.append(rikishi_tweets['n_following'].describe()[ind])
+    index = ['following_'+ind for ind in index]
+    rikishi_data = pd.Series(data=following, index=index, name=rikishi)
+    return rikishi_data
+
+
+def rikishi_followed(rikishi_tweets):
+    index = ['mean', 'std', 'min', '25%', '50%', '75%', 'max']
+    followed = []
+    for ind in index:
+        followed.append(rikishi_tweets['n_followed'].describe()[ind])
+    index = ['followed_'+ind for ind in index]
+    rikishi_data = pd.Series(data=followed, index=index, name=rikishi)
+    return rikishi_data
+
+
+def rikishi_n_tweets(rikishi_tweets):
+    index = ['mean', 'std', 'min', '25%', '50%', '75%', 'max']
+    n_tweets = []
+    for ind in index:
+        n_tweets.append(rikishi_tweets['n_tweets'].describe()[ind])
+    index = ['n_tweets_'+ind for ind in index]
+    rikishi_data = pd.Series(data=n_tweets, index=index, name=rikishi)
+    return rikishi_data
+
+
+def rikishi_favorited(rikishi_tweets):
+    index = ['mean', 'std', 'min', '25%', '50%', '75%', 'max']
+    favorited = []
+    for ind in index:
+        favorited.append(rikishi_tweets['n_favorited'].describe()[ind])
+    index = ['favorited_'+ind for ind in index]
+    rikishi_data = pd.Series(data=favorited, index=index, name=rikishi)
+    return rikishi_data
+
+
+
+def rikishi_ability():
+    ability = pd.read_csv('input/201807_bt_ability.csv', index_col=0)
+    ability = ability.drop('s.e.', axis=1)
+    ability = ability.T
+    return ability
+
+
 
 
 
 if __name__ == '__main__':
-    key_word = 'somou' #相撲
-    ym = '2018-07-'
-    day = ['08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22']
-    infile = []
-    summary = np.nan
-    for d in day:
-        ymd = ym+d
+    rikishi_list = [
+        'tsururyuu', 'shiroootori', 'mareseinosato', 'kusamafuji', 'goueidou', 'takayasu',
+        'tochinokokoro', 'ontakeumi', 'tamawashi', 'matsuootoriyama', 'shoudai', 'konshoukiku',
+        'chiyonokuni', 'ahonoo', 'takashikeishou', 'kaihijiri', 'daishoumaru', 'kakaze',
+        'chiyodairyuu', 'takarafuji', 'daieishou', 'chiyoshouuma', 'asahidaihoshi', 'myougiryuu',
+        'yutakayama', 'nishikiki', 'hekiyama', 'abusaki', 'sadanoumi', 'kouwashi', 'tochikouyama',
+        'asanoyama', 'konmegumihikari', 'okinoumi', 'ryuuden', 'kitakachifuji', 'hattorisakura'
+        ### 'endo', 'ikioi', 'chiyomaru', 'akiumi', 'ishiura'
+    ]
+    rikishi_kanji = [
+        '鶴竜', '白鵬', '稀勢の里', '日馬富士', '豪栄道', '高安',
+        '栃ノ心', '御嶽海', '玉鷲', '松鳳山', '正代', '琴奨菊',
+        '千代の国', '阿炎', '貴景勝', '魁聖', '大翔丸', '嘉風',
+        '千代大龍', '宝富士', '大栄翔', '千代翔馬', '旭大星', '妙義龍',
+        '豊山', '錦木', '碧山', '阿武咲', '佐田の海', '荒鷲', '栃煌山',
+        '朝乃山', '琴恵光', '隠岐の海', '竜電', '北勝富士', '服部桜'
+    ]
+    rikishi_dict = dict(zip(rikishi_list, rikishi_kanji))
+    all_rikishi_data = pd.DataFrame(columns=rikishi_list)
+
+    for rikishi in rikishi_list:
         print('-'*40)
-        print(ymd)
-        one_day = make_1d_data(ymd)
-        one_day = exclude_inappropriate_data(one_day, ymd)
-        word_list = words_with_keyword(one_day)
-        # make_word_cloud(ymd, word_list)
-        summary = make_summary(ymd, word_list, summary)
+        print(rikishi)
+        # basho = make_basho_tweets(rikishi)
+        # basho = exclude_inappropriate_data(rikishi, basho)
+        # word_list = words_with_keyword(basho)
+        # make_word_cloud(rikishi, word_list)
+        ## summary = make_words_summary(rikishi, ymd, word_list, summary)
+        rikishi_data = make_rikishi_data(rikishi)
+        all_rikishi_data[rikishi] = rikishi_data
+
+    all_rikishi_data = all_rikishi_data.rename(columns=rikishi_dict)
+    ability = rikishi_ability()
+    all_rikishi_data = pd.concat([all_rikishi_data, ability], axis=0)
+    all_rikishi_data.to_csv('output/201807_all_data.csv')
