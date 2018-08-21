@@ -199,6 +199,27 @@ class TweetsGetterBySearch(TweetsGetter):
 
 
 
+def makeNewCol(tweet):
+    date_time = (tweet["created_at"])
+    id = (tweet["user"]["screen_name"])
+    name = (tweet["user"]["name"])
+    profile = (tweet["user"]["description"])
+    n_following = (tweet["user"]["friends_count"])
+    n_followed = (tweet["user"]["followers_count"])
+    n_tweets = (tweet["user"]["statuses_count"])
+    addres = (tweet["user"]["location"])
+    n_favorited = (tweet["favorite_count"])
+    text = (tweet["text"])
+
+    new_col = pd.Series([date_time, id, name, profile, n_following,
+                         n_followed, n_tweets, addres, n_favorited, text],
+                        index=["time", "id", "name", "profile", "n_following",
+                               "n_followed", "n_tweets", "adress", "n_favorited","text"])
+
+
+
+
+
 if __name__ == '__main__':
     kakasi = kakasi()
     kakasi.setMode('H', 'a')
@@ -207,46 +228,33 @@ if __name__ == '__main__':
     conv = kakasi.getConverter()
 
     keyword_list = [
-                    '鶴竜', '白鵬', '稀勢の里', '日馬富士',
-                    '豪栄道', '高安', '栃ノ心',
-                    '御嶽海', '玉鷲', '松鳳山',
-                    '正代', '琴奨菊', '千代の国', '阿炎', '貴景勝', '魁聖',
-                    '大翔丸', '嘉風', '千代大龍', '宝富士', '大栄翔',
-                    '千代翔馬', '旭大星', '妙義龍', '豊山', '千代丸',
-                    '錦木', '碧山', '阿武咲', '佐田の海', '荒鷲', '栃煌山',
-                    '朝乃山', '琴恵光', '隠岐の海', '石浦', '竜電',
-                    '北勝富士', '明生', '服部桜',
-                    '相撲',
-                    '#sumo', '#相撲', '#大相撲', '#名古屋場所'
+                    # '鶴竜', '白鵬', '稀勢の里', '日馬富士',
+                    # '豪栄道', '高安', '栃ノ心',
+                    # '御嶽海', '玉鷲', '松鳳山',
+                    # '正代', '琴奨菊', '千代の国', '阿炎', '貴景勝', '魁聖',
+                    # '大翔丸', '嘉風', '千代大龍', '宝富士', '大栄翔',
+                    # '千代翔馬', '旭大星', '妙義龍', '豊山', '千代丸',
+                    # '錦木', '碧山', '阿武咲', '佐田の海', '荒鷲', '栃煌山',
+                    # '朝乃山', '琴恵光', '隠岐の海', '石浦', '竜電',
+                    # '北勝富士', '明生', '服部桜',
+                    # '相撲',
+                    # '#sumo', '#相撲', '#大相撲', '#名古屋場所'
+        '妙義龍'
     ]
 
-    for i in range(len(keyword_list)):
-        keyword = keyword_list[i]
+    for keyword in keyword_list:
+        print(keyword)
         keyword_romaji = conv.do(keyword)
-        since = '2018-07-15'   #edit!!!
-        until = '2018-07-16'   #edit!!!
-
+        # since = '2018-07-15'
+        # until = '2018-07-16'
+        since = '2018-08-15'
+        until = '2018-08-16'
         getter = TweetsGetter.bySearch(keyword+' since:'+since+' until:'+until)
 
         df = pd.DataFrame(columns=["time", "id", "name", "profile", "n_following",
                                    "n_followed", "n_tweets", "adress", "n_favorited","text"])
         for tweet in getter.collect(total = 20000):
-            date_time = (tweet["created_at"])
-            id = (tweet["user"]["screen_name"])
-            name = (tweet["user"]["name"])
-            profile = (tweet["user"]["description"])
-            n_following = (tweet["user"]["friends_count"])
-            n_followed = (tweet["user"]["followers_count"])
-            n_tweets = (tweet["user"]["statuses_count"])
-            addres = (tweet["user"]["location"])
-            n_favorited = (tweet["favorite_count"])
-            text = (tweet["text"])
-
-            new_col = pd.Series([date_time, id, name, profile, n_following,
-                                 n_followed, n_tweets, addres, n_favorited, text],
-                                index=["time", "id", "name", "profile", "n_following",
-                                       "n_followed", "n_tweets", "adress", "n_favorited","text"])
-
-            df = df.append(new_col, ignore_index=True)
+            new_col = makeNewCol(tweet)
+            df.append(new_col, ignore_index=True)
 
         df.to_csv('output/'+keyword_romaji+since+'.csv')

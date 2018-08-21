@@ -90,12 +90,6 @@ def exclude_bot_data(data):
 
 def words_with_keyword(data):
     print('words_with_keyword')
-    word_list = make_word_list(data)
-    word_list = remove_stop_words(word_list)
-    return word_list
-
-
-def make_word_list(data):
     m = MeCab.Tagger("-d /usr/local/lib/mecab/dic/mecab-ipadic-neologd/")
     word_list = []
     for i in range(data.shape[0]):
@@ -106,35 +100,10 @@ def make_word_list(data):
                 text = re.split('[\t,]', text)
                 if text[0] == 'EOS' or text[0] == '':
                     pass
-                elif text[1] == '名詞':
+                elif text[1] in ['名詞', '形容詞', '動詞', '副詞']:
                     word_list.append(text[0])
     return word_list
 
-
-def remove_stop_words(word_list):
-    stop_words = [
-        'in', 'ー', 'bot', 'https', 'co', 'ない', '無い', '投稿', 'ツイート', '今日', '明日',
-        'さん', 'こと', 'よう', 'それ', 'どこ', 'これ', 'みたい', '名前', '自分', 'ちゃん', 'そう',
-        '登録', 'くん', 'あと', 'そこ', 'ため', 'うち', 'ここ', 'ところ', 'なん', '感じ', '情報',
-        'もの', 'とき', 'やつ', 'もん', 'しよう', 'わけ', 'たち', 'とこ', 'つもり', 'こちら',
-        'しんみ', 'した', 'せい', 'さま', 'さっき', 'こっち', 'かな', 'まま', '最近', '時間',
-        '場所', '本日', '付近', 'よろしくお願いします', '昨日', '今週', '来週', '先週', 'みんな',
-        '相撲', '名古屋場所', 'sumo', '大相撲', '力士', '中継', '相撲部', '相撲取り',
-        '大相撲名古屋場所','相手', '土俵', '？？？', 'あれ', '近く', 't', 'の', 'ん', 'w',
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '０', '１', '２','３', '４',
-        '５', '６', '７', '８', '９', '方', '何', '中', '笑', '今', 'さ', '時', '関', '事',
-        '気', 'ニュース', '話', 'www', 'ω', '的', '目', '様', '後', '俺', 'スーモ', '日',
-        '手', '次', '観', '君', '…。', '山', '感', '回', 'ww', 'SD', '差'
-    ]
-
-    for word in stop_words:
-        remove_specified_values(word_list, word)
-    return word_list
-
-
-def remove_specified_values(arr, value):
-    while value in arr:
-        arr.remove(value)
 
 
 
@@ -142,30 +111,28 @@ def make_word_cloud(rikishi, word_list):
     print('make_word_cloud')
     word_list = ' '.join(word_list)
 
-    fpath = "~/Library/Fonts/RictyDiminished-Regular.ttf"
-    wordcloud = WordCloud(background_color="white", font_path=fpath, width=900, height=500, max_words=80).generate(word_list)
+    font_path = "~/Library/Fonts/RictyDiminished-Regular.ttf"
+    stopwords = [
+        'in', 'bot', 'https', 'co', 'ない', '無い', '投稿', 'ツイート', '今日', '明日',
+        'さん', 'こと', 'よう', 'それ', 'どこ', 'これ', 'みたい', '名前', '自分', 'ちゃん',
+        '登録', 'くん', 'あと', 'そこ', 'ため', 'うち', 'ここ', 'ところ', 'なん', '感じ',
+        'もの', 'とき', 'やつ', 'もん', 'しよう', 'わけ', 'たち', 'とこ', 'つもり', 'こちら',
+        'しんみ', 'した', 'せい', 'さま', 'さっき', 'こっち', 'かな', 'まま', '最近', '時間',
+        '場所', '本日', '付近', 'よろしくお願いします', '昨日', '今週', '来週', '先週', 'みんな',
+        '相撲', '名古屋場所', 'sumo', '大相撲', '力士', '中継', '相撲部', '相撲取り', '情報',
+        '大相撲名古屋場所','相手', '土俵', '？？？', 'あれ', '近く', '思っ', 'しまっ', 'どう',
+        'てる', 'ある', 'なる', 'なっ', 'やっ', 'あっ', 'ちゃっ', 'くれ', 'する', 'そう',
+        'ニュース', 'www', 'スーモ', '…。', 'ww', 'られ', '思い', 'いる', 'ーーー', '思う'
+    ]
 
-    plt.figure(figsize=(10,8))
+    wordcloud = WordCloud(background_color="white", font_path=font_path, width=900, height=500,
+                          max_words=70, stopwords=set(stopwords)).generate(word_list)
+
+    plt.figure(figsize=(9,5))
     plt.imshow(wordcloud)
     plt.axis("off")
     plt.savefig(f'output/{rikishi}_wordcloud.png')
     plt.show()
-
-
-
-# def make_words_summary(rikishi, ymd, word_list, summary):
-#     print('make_summary')
-#     counter = Counter(word_list)
-#     words, counts = zip(*counter.most_common(100))
-#     summary_1d = pd.Series(data=counts, index=words, name=ymd)
-#     if ymd == '2018-07-08':
-#         summary = summary_1d.copy()
-#     else:
-#         summary = pd.concat([summary, summary_1d], axis=1)
-#     # summary_1d.to_csv(f'output/{rikishi}{ymd}_words.csv')
-#     if ymd == '2018-07-22':
-#         summary.to_csv(f'output/{rikishi}_words.csv')
-#     return summary
 
 
 
@@ -259,7 +226,7 @@ if __name__ == '__main__':
         'asanoyama', 'konmegumihikari', 'okinoumi', 'ryuuden', 'kitakachifuji', 'hattorisakura'
         ### 'endo', 'ikioi', 'chiyomaru', 'akiumi', 'ishiura'
     ]
-    Rikishi_kanji = [
+    rikishi_kanji = [
         '鶴竜', '白鵬', '稀勢の里', '日馬富士', '豪栄道', '高安',
         '栃ノ心', '御嶽海', '玉鷲', '松鳳山', '正代', '琴奨菊',
         '千代の国', '阿炎', '貴景勝', '魁聖', '大翔丸', '嘉風',
@@ -273,11 +240,10 @@ if __name__ == '__main__':
     for rikishi in rikishi_list:
         print('-'*40)
         print(rikishi)
-        # basho = make_basho_tweets(rikishi)
-        # basho = exclude_inappropriate_data(rikishi, basho)
-        # word_list = words_with_keyword(basho)
-        # make_word_cloud(rikishi, word_list)
-        ## summary = make_words_summary(rikishi, ymd, word_list, summary)
+        basho = make_basho_tweets(rikishi)
+        basho = exclude_inappropriate_data(rikishi, basho)
+        word_list = words_with_keyword(basho)
+        make_word_cloud(rikishi, word_list)
         rikishi_data = make_rikishi_data(rikishi)
         all_rikishi_data[rikishi] = rikishi_data
 

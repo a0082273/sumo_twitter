@@ -6,3 +6,4 @@ __pycache__/
 setting.py
 .ipynb_checkpoints/
 .DS_Store
+.env
